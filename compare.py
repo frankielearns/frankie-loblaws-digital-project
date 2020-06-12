@@ -1,46 +1,67 @@
 # import the necessary packages
 from skimage import metrics
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import csv
+import re
+import os
+from timeit import default_timer as timer
+files = []
+path = os.getcwd()
+
+image_1_files_list = []
+image_2_files_list = []
+similarity = []
+elapsed = []
+
+with os.scandir("{0}/images/".format(path)) as entries:
+    for entry in entries:
+        files.append(entry.name)
+files_list = iter(files)
+
+with open('input.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["image1", "image2"])
+    files_list = iter(files)
+    for file in files_list:
+        writer.writerow(['=HYPERLINK("{0}/images/{1}", "{1}")'.format(path, file), '=HYPERLINK("{0}/images/{1}", "{1}")'.format(path, next(files_list))])
+
 
 with open('input.csv', 'r') as file:
     reader = csv.reader(file)
+    next(reader)
     for row in reader:
-        print(row)
-
-def mse(imageA, imageB):
-	# the 'Mean Squared Error' between the two images is the
-	# sum of the squared difference between the two images;
-	# NOTE: the two images must have the same dimension
-	err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
-	err /= float(imageA.shape[0] * imageA.shape[1])
-
-	# return the MSE, the lower the error, the more "similar"
-	# the two images are
-	return err
+        image_1 = (re.sub('\=HYPERLINK\(|\)', '',row[0]))
+        image_2 = (re.sub('\=HYPERLINK\(|\)', '',row[1]))
+        image_1_string_to_list = image_1.split(',')
+        image_2_string_to_list = image_2.split(',')
+        image_1_files_list.append(image_1_string_to_list[0].strip('""'))
+        image_2_files_list.append(image_2_string_to_list[0].strip('""'))
 
 def compare_images(imageA, imageB, title):
-	# compute the mean squared error and structural similarity
-	# index for the images
 	s = metrics.structural_similarity(imageA, imageB)
-	print(1 - s)
-
-# load the images -- the original, the original + contrast,
-# and the original + photoshop
-original = cv2.imread("/i/frankie-loblaws-digital-project/images/aa.jpg")
-contrast = cv2.imread("images/ab.png")
-shopped = cv2.imread("images/ba.jpg")
-
-# convert the images to grayscale
-original = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-contrast = cv2.cvtColor(contrast, cv2.COLOR_BGR2GRAY)
-shopped = cv2.cvtColor(shopped, cv2.COLOR_BGR2GRAY)
+	return (1 - s)
 
 
+# print(image_1_files_list[0])
+# print(image_2_files_list[0])
 
-# compare the images
-compare_images(original, original, "Original vs. Original")
-compare_images(original, contrast, "Original vs. Contrast")
-compare_images(original, shopped, "Original vs. Photoshopped")
+for images1, images2 in zip(image_1_files_list, image_2_files_list):
+    start = timer()
+    original = cv2.imread(images1)
+    contrast = cv2.imread(images2)
+
+    original = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+    contrast = cv2.cvtColor(contrast, cv2.COLOR_BGR2GRAY)
+    print(images1, images2)
+    end = timer()
+    elapsed.append(end - start)
+
+    similarity.append(compare_images(original, contrast, "Original vs. Contrast"))
+
+with open('output.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["image1", "image2", "similar", "elapsed"])
+    files_list = iter(files)
+    for file, similars, elapseds  in zip(files_list, similarity, elapsed):
+        writer.writerow(['=HYPERLINK("{0}/images/{1}", "{1}")'.format(path, file), '=HYPERLINK("{0}/images/{1}", "{1}")'.format(path, next(files_list)), '{0}'.format(similars), '{0}'.format(elapseds)])
