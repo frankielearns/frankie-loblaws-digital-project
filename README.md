@@ -5,7 +5,7 @@ Loblaws Digital interview project for comparing image similarities me  in a csv 
 
 ## Diagram
 
-![Workflow Diagram](diagram.png?raw=true "Workflow Diagram")
+![Workflow Diagram](workflow_diagram.png?raw=true "Workflow Diagram")
 
 
 ## Designing and Implementation reasoning
@@ -36,7 +36,7 @@ IMAGES_DIRECTORY = i:\frankie-loblaws-digital-project
 make compare-images
 ```
 
-5. After running the make target, there should be two files called input.csv and output.csv in the repository folder 
+5. After running the make target, there should be two files called input.csv and output.csv in the repository folder
 
 ## Usage for Linux/Mac
 
